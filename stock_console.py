@@ -225,36 +225,39 @@ def buy_stock(stock_list):
                     _ = input("Press Enter to continue...")
                     return
                 
-                # Ask for transaction date
-                date_str = input("Enter transaction date (MM/DD/YYYY [Leave Blank for today]: ")
-                if date_str == "":
-                    transaction_date = datetime.now()
-                    if is_market_open_now():
-                        price = get_real_time_price(symbol)
-                        if price is None:
-                            price = get_latest_close_price(stock)
-                            print("Market open, but failed to get real-time price. Using last close price instead.")
-                    else:
-                        price = get_latest_close_price(stock)
-                        print("Market closed. Using last close price.")
-                else:
-                    transaction_date = datetime.strptime(date_str, "%m/%d/%Y")
-                    price = None
-                    for daily in stock.DataList:
-                        if daily.date.strftime("%m/%d/%Y") == date_str:
-                            price = daily.close
-                            break
-                    if price is None:
-                        print("Error: No market data for that date.")
-                        return
+                # # Ask for transaction date [optional]
+                # date_str = input("Enter transaction date (MM/DD/YYYY [Leave Blank for today]: ")
+                # if date_str == "":
+                #     transaction_date = datetime.now()
+                #     if is_market_open_now():
+                #         price = get_real_time_price(symbol)
+                #         if price is None:
+                #             price = get_latest_close_price(stock)
+                #             print("Market open, but failed to get real-time price. Using last close price instead.")
+                #     else:
+                #         price = get_latest_close_price(stock)
+                #         print("Market closed. Using last close price.")
+                # else:
+                #     transaction_date = datetime.strptime(date_str, "%m/%d/%Y")
+                #     price = None
+                #     for daily in stock.DataList:
+                #         if daily.date.strftime("%m/%d/%Y") == date_str:
+                #             price = daily.close
+                #             break
+                #     if price is None:
+                #         print("Error: No market data for that date.")
+                #         _ = input("Press Enter to continue...")
+                #         return
                     
                 stock.buy(shares)
-                log_transaction(symbol, "BUY", shares, price, transaction_date)
+                # log_transaction(symbol, "BUY", shares, price, transaction_date)
 
-                print(f"Bought {shares} shares of {symbol} at ${price} on {transaction_date.strftime('%m/%d/%Y')}.")
+                # print(f"Bought {shares} shares of {symbol} at ${price} on {transaction_date.strftime('%m/%d/%Y')}.")
+                print(f"Bought {shares} shares of {symbol}.")
                 print(f"Total shares of {symbol}: {stock.shares}")
             except ValueError:
                 print("Error: Invalid number of shares. Please enter a numeric value.")
+            _ = input("Press Enter to continue...")
             return
     print(f"Error: Stock symbol {symbol} not found in list.")
     _ = input("Press Enter to continue...")
@@ -287,35 +290,39 @@ def sell_stock(stock_list):
                     _ = input("Press Enter to continue...")
                     return
                 
-                date_str = input("Enter transaction date (MM/DD/YYYY [Leave Blank for today]: ")
-                if date_str == "":
-                    transaction_date = datetime.now()
-                    if is_market_open_now():
-                        price = get_real_time_price(symbol)
-                        if price is None:
-                            price = get_latest_close_price(stock)
-                            print("Market open, but failed to get real-time price. Using last close price instead.")
-                    else:
-                        price = get_latest_close_price(stock)
-                        print("Market closed. Using last close price.")
-                else:
-                    transaction_date = datetime.strptime(date_str, "%m/%d/%Y")
-                    price = None
-                    for daily in stock.DataList:
-                        if daily.date.strftime("%m/%d/%Y") == date_str:
-                            price = daily.close
-                            break
-                    if price is None:
-                        print("Error: No market data for that date.")
-                        return
+                # # Ask for transaction date [optional]
+                # date_str = input("Enter transaction date (MM/DD/YYYY [Leave Blank for today]: ")
+                # if date_str == "":
+                #     transaction_date = datetime.now()
+                #     if is_market_open_now():
+                #         price = get_real_time_price(symbol)
+                #         if price is None:
+                #             price = get_latest_close_price(stock)
+                #             print("Market open, but failed to get real-time price. Using last close price instead.")
+                #     else:
+                #         price = get_latest_close_price(stock)
+                #         print("Market closed. Using last close price.")
+                # else:
+                #     transaction_date = datetime.strptime(date_str, "%m/%d/%Y")
+                #     price = None
+                #     for daily in stock.DataList:
+                #         if daily.date.strftime("%m/%d/%Y") == date_str:
+                #             price = daily.close
+                #             break
+                #     if price is None:
+                #         print("Error: No market data for that date.")
+                #         _ = input("Press Enter to continue...")
+                #         return
                     
-                    stock.sell(shares)
-                    log_transaction(symbol, "SELL", shares, price, transaction_date)
+                stock.sell(shares)
+                # log_transaction(symbol, "SELL", shares, price, transaction_date)
 
-                    print(f"Sold {shares} shares of {symbol} at ${price} on {transaction_date.strftime('%m/%d/%Y')}.")
-                    print(f"Total shares of {symbol}: {stock.shares}")
+                # print(f"Sold {shares} shares of {symbol} at ${price} on {transaction_date.strftime('%m/%d/%Y')}.")
+                print(f"Sold {shares} shares of {symbol}.")
+                print(f"Total shares of {symbol}: {stock.shares}")
             except ValueError:
                 print("Error: Invalid number of shares. Please enter a numeric value.")
+            _ = input("Press Enter to continue...")
             return
     print(f"Error: Stock symbol {symbol} not found in list.")
     _ = input("Press Enter to continue...")
@@ -334,8 +341,10 @@ def delete_stock(stock_list):
     symbol = input("Enter Stock Symbol to delete: ").upper()
 
     # Find the stock in the list
+    found = False
     for i, stock in enumerate(stock_list):
         if stock.symbol == symbol:
+            found = True
             confirm = input(f"Are you sure you want to delete {stock.name} ({symbol})? (y/n): ").lower()
             if confirm == "y":
                 stock_list.pop(i)
@@ -343,8 +352,7 @@ def delete_stock(stock_list):
             else:
                 print(f"Deletion of {stock.name} ({symbol}) cancelled.")
             break
-    
-    else:
+    if not found:
         print(f"Error: Stock symbol {symbol} not found in list.")
     _ = input("Press Enter to continue...")
 
@@ -452,10 +460,18 @@ def display_report(stock_data):
             percent = (change / prev_price) * 100
             print(f"\tPrevious Close: ${prev_price:.2f}")
             print(f"\tChange: ${change:.2f} ({percent:.2f}%)")
+
+        print("\n\tDate\t\tClose\t\tVolume")
+        print("\t" + "-" * 40)
+
+        # Show full price/volume history (most recent first)
+        for data in stock.DataList:
+            date_str = data.date.strftime("%Y-%m-%d")
+            print(f"\t{date_str}\t${data.close:.2f}\t\t{int(data.volume)}")
         
         print("-" * 60)
-    
-    _= input("Press Enter to continue...")
+
+    _ = input("Press Enter to continue...")
 
 # Display Chart
 def display_chart(stock_list):
@@ -497,7 +513,9 @@ def manage_data(stock_list):
             option = input("Enter Menu Option: ")
         
         if option == "1":
-            stock_data.save_stock_data(stock_list)
+            overwrite = input(f"Do you want to overwrite the Database using local data? (y/n): ").lower()
+            overwrite = True if overwrite == "y" else False
+            stock_data.save_stock_data(stock_list, overwrite=overwrite)
             print("Data saved to database.")
             _ = input("Press Enter to continue...")
         elif option == "2":

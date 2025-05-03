@@ -32,20 +32,25 @@ def create_database():
                             volume REAL NOT NULL,
                             PRIMARY KEY (symbol, date)
                         );"""   
-    createTransactionTableCmd = """CREATE TABLE IF NOT EXISTS transactions (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            symbol TEXT NOT NULL,
-                            type TEXT NOT NULL,        -- BUY or SELL
-                            shares REAL NOT NULL,
-                            price REAL NOT NULL,
-                            date TEXT NOT NULL
-                        );"""
+    # createTransactionTableCmd = """CREATE TABLE IF NOT EXISTS transactions (
+    #                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #                         symbol TEXT NOT NULL,
+    #                         type TEXT NOT NULL,        -- BUY or SELL
+    #                         shares REAL NOT NULL,
+    #                         price REAL NOT NULL,
+    #                         date TEXT NOT NULL
+    #                     );"""
     cur.execute(createStockTableCmd)
     cur.execute(createDailyDataTableCmd)
-    cur.execute(createTransactionTableCmd)
+    # cur.execute(createTransactionTableCmd)
 
 # Save stocks and daily data into database
-def save_stock_data(stock_list):
+def save_stock_data(stock_list, overwrite=False):
+    if overwrite:
+        # Delete the existing database if overwrite is True
+        if os.path.exists("stocks.db"):
+            os.remove("stocks.db")
+        create_database()
     stockDB = "stocks.db"
     conn = sqlite3.connect(stockDB)
     cur = conn.cursor()
@@ -133,13 +138,17 @@ def retrieve_stock_web(dateStart,dateEnd,stock_list):
 # Get price and volume history from Yahoo! Finance using CSV import.
 def import_stock_web_csv(stock_list,symbol,filename):
     for stock in stock_list:
-            if stock.symbol == symbol:
-                with open(filename, newline='') as stockdata:
-                    datareader = csv.reader(stockdata,delimiter=',')
-                    next(datareader)
-                    for row in datareader:
+        if stock.symbol == symbol:
+            with open(filename, newline='') as stockdata:
+                datareader = csv.reader(stockdata,delimiter=',')
+                next(datareader)
+                for row in datareader:
+                    try:
                         daily_data = DailyData(datetime.strptime(row[0],"%Y-%m-%d"),float(row[4]),float(row[6]))
-                        stock.add_data(daily_data)
+                    except:
+                        print('Dividend or other non-standard data found. Skipping row.')
+                        continue
+                    stock.add_data(daily_data)
 
 def main():
     clear_screen()
