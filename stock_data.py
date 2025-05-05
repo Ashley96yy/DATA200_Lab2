@@ -32,17 +32,8 @@ def create_database():
                             volume REAL NOT NULL,
                             PRIMARY KEY (symbol, date)
                         );"""   
-    # createTransactionTableCmd = """CREATE TABLE IF NOT EXISTS transactions (
-    #                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #                         symbol TEXT NOT NULL,
-    #                         type TEXT NOT NULL,        -- BUY or SELL
-    #                         shares REAL NOT NULL,
-    #                         price REAL NOT NULL,
-    #                         date TEXT NOT NULL
-    #                     );"""
     cur.execute(createStockTableCmd)
     cur.execute(createDailyDataTableCmd)
-    # cur.execute(createTransactionTableCmd)
 
 # Save stocks and daily data into database
 def save_stock_data(stock_list, overwrite=False):

@@ -120,61 +120,6 @@ def add_stock(stock_list):
         print(f"Stock {symbol} ({name}) with {shares} added to list.")
         option = input("Press Enter to add another stock or 0 to exit: ")
 
-##### In real-world stock markets:
-"""Market Open (Weekday + Not Holiday + 9:30–16:00): Use real-time price
-   Otherwise: 	Use latest close price"""
-# Get latest close price
-def get_latest_close_price(stock):
-    if not stock.DataList:
-        return None
-    latest_data = sorted(stock.DataList, key=lambda x: x.date, reverse=True)[0]
-    return latest_data.close
-
-# Get real-time price
-def get_real_time_price(symbol):
-    try:
-        stock = yf.Ticker(symbol)
-        return stock.fast_info['last_price']
-    except:
-        return None
-
-# Check if the day is holidy
-def is_us_holiday(date=None):
-    us_holidays = holidays.US()
-    if date is None:
-        date = datetime.now().date()
-    return date in us_holidays
-    
-# Check if the market is open right now
-def is_market_open_now():
-    eastern = pytz.timezone('US/Eastern')
-    now = datetime.now(tz=eastern)
-    weekday = now.weekday()
-
-    # Check for weekend
-    if weekday >= 5:
-        return False
-    
-    # Check for US holiday
-    if is_us_holiday(now.date()):
-        return False
-    
-    # Check for market hours (9:30 AM - 4:00 PM EST)
-    hour = now.hour
-    minute = now.minute
-    current_minutes = hour * 60 + minute
-    return 570 <= current_minutes <= 960 # Between 9:30 AM and 4:00 PM EST
-
-# Insert transaction into database
-def log_transaction(symbol, transaction_type, shares, price, date):
-    conn = sqlite3.connect("stocks.db")
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO transactions (symbol, type, shares, price, date)
-        VALUES (?, ?, ?, ?, ?);
-    """, (symbol, transaction_type, shares, price, date.strftime("%Y-%m-%d %H:%M:%S")))
-    conn.commit()
-    conn.close()
         
 # Buy or Sell Shares Menu
 def update_shares(stock_list):
@@ -225,34 +170,9 @@ def buy_stock(stock_list):
                     _ = input("Press Enter to continue...")
                     return
                 
-                # # Ask for transaction date [optional]
-                # date_str = input("Enter transaction date (MM/DD/YYYY [Leave Blank for today]: ")
-                # if date_str == "":
-                #     transaction_date = datetime.now()
-                #     if is_market_open_now():
-                #         price = get_real_time_price(symbol)
-                #         if price is None:
-                #             price = get_latest_close_price(stock)
-                #             print("Market open, but failed to get real-time price. Using last close price instead.")
-                #     else:
-                #         price = get_latest_close_price(stock)
-                #         print("Market closed. Using last close price.")
-                # else:
-                #     transaction_date = datetime.strptime(date_str, "%m/%d/%Y")
-                #     price = None
-                #     for daily in stock.DataList:
-                #         if daily.date.strftime("%m/%d/%Y") == date_str:
-                #             price = daily.close
-                #             break
-                #     if price is None:
-                #         print("Error: No market data for that date.")
-                #         _ = input("Press Enter to continue...")
-                #         return
                     
                 stock.buy(shares)
-                # log_transaction(symbol, "BUY", shares, price, transaction_date)
-
-                # print(f"Bought {shares} shares of {symbol} at ${price} on {transaction_date.strftime('%m/%d/%Y')}.")
+               
                 print(f"Bought {shares} shares of {symbol}.")
                 print(f"Total shares of {symbol}: {stock.shares}")
             except ValueError:
@@ -289,35 +209,9 @@ def sell_stock(stock_list):
                     print(f"Error: Not enough shares of {symbol} to sell.")
                     _ = input("Press Enter to continue...")
                     return
-                
-                # # Ask for transaction date [optional]
-                # date_str = input("Enter transaction date (MM/DD/YYYY [Leave Blank for today]: ")
-                # if date_str == "":
-                #     transaction_date = datetime.now()
-                #     if is_market_open_now():
-                #         price = get_real_time_price(symbol)
-                #         if price is None:
-                #             price = get_latest_close_price(stock)
-                #             print("Market open, but failed to get real-time price. Using last close price instead.")
-                #     else:
-                #         price = get_latest_close_price(stock)
-                #         print("Market closed. Using last close price.")
-                # else:
-                #     transaction_date = datetime.strptime(date_str, "%m/%d/%Y")
-                #     price = None
-                #     for daily in stock.DataList:
-                #         if daily.date.strftime("%m/%d/%Y") == date_str:
-                #             price = daily.close
-                #             break
-                #     if price is None:
-                #         print("Error: No market data for that date.")
-                #         _ = input("Press Enter to continue...")
-                #         return
                     
                 stock.sell(shares)
-                # log_transaction(symbol, "SELL", shares, price, transaction_date)
-
-                # print(f"Sold {shares} shares of {symbol} at ${price} on {transaction_date.strftime('%m/%d/%Y')}.")
+                
                 print(f"Sold {shares} shares of {symbol}.")
                 print(f"Total shares of {symbol}: {stock.shares}")
             except ValueError:
@@ -340,7 +234,6 @@ def delete_stock(stock_list):
     
     symbol = input("Enter Stock Symbol to delete: ").upper()
 
-    # Find the stock in the list
     found = False
     for i, stock in enumerate(stock_list):
         if stock.symbol == symbol:
@@ -406,16 +299,17 @@ def manual_add_data(stock_list):
             print(f"{stock.symbol}]")
     
     symbol = input("Enter Stock Symbol: ").upper()
+    found = False
 
     # Find the stock in the list
     for stock in stock_list:
         if stock.symbol == symbol:
+            found = True
             date_str = input("Enter Date (MM/DD/YYYY): ")
 
             try:
                 data_obj = datetime.strptime(date_str, "%m/%d/%Y")
 
-                # Check if date already exists
                 for daily_data in stock.DataList:
                     if daily_data.date.strftime("%m/%d/%Y") == date_str:
                         print(f"Error: Data for {symbol} on {date_str} already exists.")
@@ -432,7 +326,8 @@ def manual_add_data(stock_list):
                 print("Error: Invalid data format or numeric value")
             _ = input("Press Enter to continue...")
             return
-            
+        
+    if not found:
         print(f"Error: Stock symbol {symbol} not found in list.")
         _ = input("Press Enter to continue...")
 
@@ -546,15 +441,13 @@ def retrieve_from_web(stock_list):
         else:
             print(f"{stock.symbol}]")
 
-    # Get the stock symbol
-    symbol = input("Enter stock symbol to retrieve data for (or 'ALL' for all stocks): ").upper()
+    symbol = input("Enter stock symbol to retrieve data for: ").upper()
     
     if symbol != "ALL" and not any(stock.symbol == symbol for stock in stock_list):
         print(f"Symbol {symbol} not found in your stock list.")
         _ = input("Press Enter to continue...")
         return
 
-     # Get date range
     print("\nEnter date range for stock data:")
     start_date = input("Enter start date (mm/dd/yy): ")
     end_date = input("Enter end date (mm/dd/yy): ")
@@ -568,7 +461,6 @@ def retrieve_from_web(stock_list):
         _ = input("Press Enter to continue...")
         return
     
-    # Create a filtered list of stocks based on user selection
     selected_stocks = []
     if symbol == "ALL":
         selected_stocks = stock_list.copy()
@@ -602,7 +494,6 @@ def import_csv(stock_list):
         _ = input("Press Enter to continue...")
         return
     
-    # Display available stocks
     print("Stock List: [", end="")
     for i, stock in enumerate(stock_list):
         if i < len(stock_list) - 1:
@@ -610,10 +501,8 @@ def import_csv(stock_list):
         else:
             print(f"{stock.symbol}]")
     
-    # Get the stock symbol
     symbol = input("Enter stock symbol to import data for: ").upper()
     
-    # Check if symbol exists in list
     found = False
     for stock in stock_list:
         if stock.symbol == symbol:
@@ -625,7 +514,6 @@ def import_csv(stock_list):
         _ = input("Press Enter to continue...")
         return
     
-    # Get filename
     print("\nPlease select the CSV file to import.")
     print("Note: The file should be in Yahoo Finance CSV format.")
     filename = input("Enter the full path to the CSV file: ")
@@ -636,7 +524,6 @@ def import_csv(stock_list):
         return
     
     try:
-        # Use the function from stock_data module
         stock_data.import_stock_web_csv(stock_list, symbol, filename)
         print(f"\nSuccessfully imported data for {symbol}.")
     except Exception as e:

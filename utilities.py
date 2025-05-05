@@ -6,10 +6,10 @@ from os import system, name
 
 # Function to Clear the Screen
 def clear_screen():
-    if name == "nt": # User is running Windows
-        _ = system('cls')
-    else: # User is running Linux or Mac
-        _ = system('clear')
+    if name == "nt": 
+        system('cls')
+    else: 
+        system('clear')
 
 # Function to sort the stock list (alphabetical)
 def sortStocks(stock_list):
@@ -24,7 +24,6 @@ def sortDailyData(stock_list):
 
 # Function to create stock chart
 def display_stock_chart(stock_list,symbol):
-    # Find the stock in the list
     selected_stock = None
     for stock in stock_list:
         if stock.symbol == symbol:
@@ -35,35 +34,31 @@ def display_stock_chart(stock_list,symbol):
         print(f"No data available for {symbol}")
         return
     
-    # Sort data chronologically (oldest to newest) for the chart
+    # Sort data from oldest to newest
     chart_data = sorted(selected_stock.DataList, key=lambda x: x.date)
     
-    # Extract dates and prices
     dates = [data.date for data in chart_data]
     prices = [data.close for data in chart_data]
     volumes = [data.volume for data in chart_data]
     
-    # Create a figure with 2 subplots (price and volume)
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), gridspec_kw={'height_ratios': [3, 1]})
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [3, 1]})
     
     # Plot price data
-    ax1.plot(dates, prices, 'b-', linewidth=2)
-    ax1.set_title(f'{selected_stock.name} ({symbol}) - Price History')
-    ax1.set_ylabel('Price ($)')
-    ax1.grid(True)
+    ax1.plot(dates, prices, color='#1f77b4', linewidth=2, marker='o', markersize=4)
+    ax1.fill_between(dates, prices, color='#1f77b4', alpha=0.1)
+    ax1.set_title(f'{selected_stock.name} ({symbol}) - Price History', fontsize=16, fontweight='bold')
+    ax1.set_ylabel('Price ($)', fontsize=12)
+    ax1.grid(True, linestyle='--', alpha=0.6)
     
-    # Plot volume data as a bar chart
-    ax2.bar(dates, volumes, color='g', alpha=0.5)
-    ax2.set_ylabel('Volume')
-    ax2.set_xlabel('Date')
-    ax2.grid(True)
+    # Plot volume data
+    ax2.bar(dates, volumes, color='#2ca02c', alpha=0.6)
+    ax2.set_ylabel('Volume', fontsize=12)
+    ax2.set_xlabel('Date', fontsize=12)
+    ax2.grid(True, linestyle='--', alpha=0.6)
     
-    # Format the figure
     plt.tight_layout()
     
-    # Rotate date labels if there are many data points
     if len(dates) > 10:
         plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45)
     
-    # Show the chart
     plt.show()
